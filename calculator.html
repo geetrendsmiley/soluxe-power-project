@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Solar System Calculator</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background: #f0f0f0;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+      }
+      label,
+      select,
+      input {
+        display: block;
+        margin-bottom: 15px;
+        width: 100%;
+      }
+      button {
+        padding: 10px;
+        background: green;
+        color: white;
+        border: none;
+        border-radius: 8px;
+      }
+      #result {
+        margin-top: 20px;
+        padding: 10px;
+        background: #e0ffe0;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Solar Inverter Battery Calculator</h2>
+
+      <label for="usage">Power Usage (watts):</label>
+      <input type="number" id="usage" placeholder="e.g. 3000" />
+
+      <label for="hours">Backup Hours Needed:</label>
+      <input type="number" id="hours" placeholder="Default is 5 hours" />
+
+      <label for="battery">Battery Voltage:</label>
+      <select id="battery">
+        <option value="12">12V</option>
+        <option value="24">24V</option>
+        <option value="48">48V</option>
+      </select>
+
+      <label for="ah">Battery Ah Rating:</label>
+      <input type="number" id="ah" placeholder="e.g. 200" />
+
+      <label for="inverter">Inverter Type (24V):</label>
+      <select id="inverter">
+        <option value="sine">Sine Wave Inverter</option>
+        <option value="transformerless">Transformerless Inverter</option>
+      </select>
+
+      <label for="panel">Solar Panel Connection:</label>
+      <select id="panel">
+        <option value="series">Series (more voltage)</option>
+        <option value="parallel">Parallel (more current)</option>
+      </select>
+
+      <button onclick="calculateSetup()">Get Recommendation</button>
+
+      <div id="result"></div>
+    </div>
+
+    <script>
+      function calculateSetup() {
+        const usage = parseInt(document.getElementById("usage").value);
+        let hours = parseInt(document.getElementById("hours").value);
+        if (!hours || hours <= 0) hours = 5;
+
+        const batteryVoltage = parseInt(
+          document.getElementById("battery").value
+        );
+        const batteryAh = parseInt(document.getElementById("ah").value);
+        const inverterType = document.getElementById("inverter").value;
+        const panelType = document.getElementById("panel").value;
+        const resultBox = document.getElementById("result");
+
+        if (!usage || usage <= 0 || !batteryAh || batteryAh <= 0) {
+          resultBox.innerHTML =
+            "Please enter valid values for watt usage and battery Ah rating.";
+          return;
+        }
+
+        const panelWatt = 250;
+        const panelCount = Math.ceil(usage / panelWatt);
+        const recommendedPanel =
+          panelCount + " panels of 250W in " + panelType + " connection";
+
+        // Battery bank sizing
+        const DoD = 0.8;
+        const efficiency = 0.85;
+        const totalAh = Math.ceil(
+          (usage * hours) / (batteryVoltage * DoD * efficiency)
+        );
+        const numberOfBatteries = Math.ceil(totalAh / batteryAh);
+
+        // Inverter capacity calculation
+        const powerFactor = 0.8;
+        const inverterKVA = Math.ceil(usage / 1000 / powerFactor); // in kVA
+        const recommendedInverter =
+          inverterKVA + " kVA (" + inverterKVA * 1000 + "W)";
+
+        let suggestion = `For a power usage of <b>${usage}W</b> and <b>${hours} hours</b> backup:<br><br>`;
+        suggestion += `✅ Battery System: <b>${batteryVoltage}V</b><br>`;
+        suggestion += `✅ Inverter Type: <b>${
+          inverterType === "sine" ? "Sine Wave" : "Transformerless"
+        }</b><br>`;
+        suggestion += `✅ Suggested Inverter Capacity: <b>${recommendedInverter}</b><br>`;
+        suggestion += `✅ Solar Panel Recommendation: <b>${recommendedPanel}</b><br>`;
+        suggestion += `✅ Total Solar Output: <b>${
+          panelCount * panelWatt
+        }W</b><br><br>`;
+
+        suggestion += `🔋 Battery Bank Sizing:<br>`;
+        suggestion += `• Required Capacity: <b>${totalAh}Ah</b> at ${batteryVoltage}V<br>`;
+        suggestion += `• With ${batteryAh}Ah batteries: <b>${numberOfBatteries} batteries</b> needed<br>`;
+
+        resultBox.innerHTML = suggestion;
+      }
+    </script>
+  </body>
+</html>
